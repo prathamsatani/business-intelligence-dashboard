@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+tests/__pycache__/
+.venv/
+
+# Log files
+*.log
+
+# Exported data and plots
+filtered_data.csv
+visualization.png
+Final_Project_Report.md

@@ -1,0 +1,7 @@
+pandas
+gradio
+plotly
+yfinance
+kaleido
+pytest
+gradio_client
