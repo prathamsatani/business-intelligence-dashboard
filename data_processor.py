@@ -7,7 +7,12 @@ import yfinance as yf
 import pandas as pd
 import os
 
-def download_stock_data(ticker, start_date, end_date, filepath):
+def download_stock_data(
+    ticker: str, 
+    start_date: str, 
+    end_date: str, 
+    filepath: str
+) -> None:
     """
     Downloads stock data from Yahoo Finance and saves it to a CSV file.
 
@@ -16,6 +21,8 @@ def download_stock_data(ticker, start_date, end_date, filepath):
         start_date (str): The start date for the data in 'YYYY-MM-DD' format.
         end_date (str): The end date for the data in 'YYYY-MM-DD' format.
         filepath (str): The path to save the CSV file.
+    Returns:
+        None
     """
     try:
         data = yf.download(ticker, start=start_date, end=end_date)
@@ -25,7 +32,12 @@ def download_stock_data(ticker, start_date, end_date, filepath):
         print(f"Failed to download data for {ticker}: {e}")
 
 def get_sample_files():
-    """Get list of sample CSV/Excel files from data/ directory."""
+    """
+    Get list of sample CSV/Excel files from data/ directory.
+    Assumes files are stored in 'data/' directory.
+    Returns:
+        list: A list of sample file names.
+    """
     data_dir = "data"
     if not os.path.exists(data_dir):
         return []
@@ -67,7 +79,7 @@ def load_data(file:str):
     except Exception as e:
         raise ValueError(f"Error loading data: {e}")
 
-def get_summary_statistics(df):
+def get_summary_statistics(df:pd.DataFrame) -> pd.DataFrame:
     """
     Returns summary statistics for numerical columns.
 
@@ -79,7 +91,7 @@ def get_summary_statistics(df):
     """
     return df.describe()
 
-def get_categorical_summary(df):
+def get_categorical_summary(df:pd.DataFrame) -> dict:
     """
     Returns a summary for categorical columns.
 
@@ -99,7 +111,7 @@ def get_categorical_summary(df):
         }
     return summary
 
-def get_missing_values(df):
+def get_missing_values(df: pd.DataFrame) -> pd.Series:
     """
     Returns a report of missing values.
 
@@ -111,7 +123,7 @@ def get_missing_values(df):
     """
     return df.isnull().sum()
 
-def get_correlation_matrix(df):
+def get_correlation_matrix(df: pd.DataFrame) -> pd.DataFrame:
     """
     Returns the correlation matrix for numerical features.
 
@@ -124,7 +136,7 @@ def get_correlation_matrix(df):
     numerical_cols = df.select_dtypes(include=['number']).columns
     return df[numerical_cols].corr()
 
-def filter_data(df, filters):
+def filter_data(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
     """
     Filters the DataFrame based on the provided filter criteria.
 
@@ -155,5 +167,5 @@ if __name__ == '__main__':
         os.makedirs('project/data')
 
     # Download data for AAPL and GOOG
-    download_stock_data('AAPL', '2020-01-01', '2023-12-31', 'project/data/sample1.csv')
-    download_stock_data('GOOG', '2020-01-01', '2023-12-31', 'project/data/sample2.csv')
+    # download_stock_data('AAPL', '2020-01-01', '2023-12-31', 'project/data/sample1.csv')
+    # download_stock_data('GOOG', '2020-01-01', '2023-12-31', 'project/data/sample2.csv')

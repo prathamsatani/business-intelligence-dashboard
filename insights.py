@@ -5,7 +5,12 @@ top/bottom performers, detecting trends, and finding anomalies.
 
 import pandas as pd
 
-def get_top_bottom_performers(df, column, n=5, ascending=False):
+def get_top_bottom_performers(
+    df: pd.DataFrame, 
+    column: str, 
+    n: int = 5, 
+    ascending: bool = False
+) -> pd.DataFrame:
     """
     Identifies the top or bottom N performers in a given column.
 
@@ -20,7 +25,11 @@ def get_top_bottom_performers(df, column, n=5, ascending=False):
     """
     return df.sort_values(by=column, ascending=ascending).head(n)
 
-def detect_trends(df, date_col, value_col):
+def detect_trends(
+    df: pd.DataFrame, 
+    date_col: str, 
+    value_col: str
+) -> str:
     """
     Detects basic seasonal trends in time series data.
     For stock data, this might show the average performance by month.
@@ -41,7 +50,11 @@ def detect_trends(df, date_col, value_col):
     return f"Best performing month on average: {monthly_avg.index[0]} with an average of {monthly_avg.iloc[0]:.2f}\\n" \
            f"Worst performing month on average: {monthly_avg.index[-1]} with an average of {monthly_avg.iloc[-1]:.2f}"
 
-def detect_anomalies(df, value_col, threshold=2):
+def detect_anomalies(
+    df: pd.DataFrame, 
+    value_col: str, 
+    threshold: float = 2
+) -> pd.DataFrame:
     """
     Detects anomalies (outliers) in a numerical column based on standard deviation.
 
