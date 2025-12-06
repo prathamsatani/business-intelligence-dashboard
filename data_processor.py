@@ -24,7 +24,19 @@ def download_stock_data(ticker, start_date, end_date, filepath):
     except Exception as e:
         print(f"Failed to download data for {ticker}: {e}")
 
-def load_data(file):
+def get_sample_files():
+    """Get list of sample CSV/Excel files from data/ directory."""
+    data_dir = "data"
+    if not os.path.exists(data_dir):
+        return []
+    
+    files = []
+    for f in os.listdir(data_dir):
+        if f.endswith(('.csv', '.xlsx', '.xls')):
+            files.append(f)
+    return sorted(files)
+
+def load_data(file:str):
     """
     Loads data from a CSV or Excel file and returns a pandas DataFrame.
 
@@ -35,11 +47,11 @@ def load_data(file):
         pandas.DataFrame: The loaded data.
     """
     try:
-        if file.name.endswith('.csv'):
-            df = pd.read_csv(file.name)    
-        elif file.name.endswith(('.xls', '.xlsx')):
-            df_xlsx = pd.read_excel(file.name)
-            df_csv = df_xlsx.to_csv(index=False)
+        if file.endswith('.csv'):
+            df = pd.read_csv(file)    
+        elif file.endswith(('.xls', '.xlsx')):
+            df_xlsx = pd.read_excel(file)
+            df = df_xlsx.to_csv(index=False)
         else:
             raise ValueError("Unsupported file format. Please upload a CSV or Excel file.")
         

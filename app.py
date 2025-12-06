@@ -1,5 +1,6 @@
 import gradio as gr
 import pandas as pd
+import os
 from data_processor import (
     load_data,
     get_summary_statistics,
@@ -7,6 +8,7 @@ from data_processor import (
     get_missing_values,
     get_correlation_matrix,
     filter_data,
+    get_sample_files
 )
 from visualizations import (
     create_time_series_plot,
@@ -25,17 +27,54 @@ warnings.filterwarnings("ignore")
 
 def create_dashboard():
     """Creates and returns the Gradio dashboard."""
+    
     with gr.Blocks() as demo:
         gr.Markdown("# Business Intelligence Dashboard")
+
+        gr.Markdown(
+            """
+            ## Known Issue: Race Condition Triggered by Early Categorical Filter Selection
+
+            A race condition occurs when a categorical column is selected as a filter immediately after uploading a file.
+            
+            Reproduction Steps:
+
+            1. Upload a file
+
+            2. Navigate to the Visualizations tab
+
+            3. Select a categorical column as a filter before performing any other action (you won't be able to see any categories)
+            
+            4. Apply the filter
+
+            **Observed Behavior:** This specific sequence triggers a race condition that results in an error.
+
+            **Workaround:** If a numerical column is selected first and a categorical filter is applied afterward, the issue does not occur.
+
+            **Status:** Under investigation.
+            """)
 
         # State variables
         df_state = gr.State(value=None)
         filtered_df_state = gr.State(value=None)
-
+        
         # ==================== DATA UPLOAD TAB ====================
         with gr.Tab("Data Upload"):
             file_input = gr.File(label="Upload your CSV or Excel file")
 
+            gr.Markdown("### Or select a sample dataset")
+            with gr.Row():
+                sample_dropdown = gr.Dropdown(
+                    label="Sample Datasets",
+                    choices=get_sample_files(),
+                    value=None,
+                    interactive=True
+                )
+            
+            load_sample_btn = gr.Button("Load Sample", variant="primary")
+            
+            gr.Markdown("### Data Overview")
+            
             with gr.Row():
                 shape_output = gr.Textbox(label="Shape")
                 columns_output = gr.Textbox(label="Columns")
@@ -73,7 +112,7 @@ def create_dashboard():
                         label="Filter Column", 
                         choices=[], 
                         interactive=True,
-                        allow_custom_value=True  # <-- Added this
+                        allow_custom_value=True
                     )
                     
                     filter_type_display = gr.Textbox(
@@ -99,7 +138,7 @@ def create_dashboard():
                         multiselect=True,
                         visible=False,
                         interactive=True,
-                        allow_custom_value=True  # <-- Added this
+                        allow_custom_value=True
                     )
                     
                     date_start = gr.Textbox(
@@ -226,9 +265,67 @@ def create_dashboard():
                 return (None, None, "", "", None, None, None, None,
                         gr.update(choices=[], value=None))
 
+        def load_sample_data(sample_name):
+            """Load a sample dataset from the data/ folder."""
+            if sample_name is None:
+                gr.Warning("Please select a sample dataset first.")
+                return (None, None, "", "", None, None, None, None, 
+                        gr.update(choices=[], value=None))
+            try:
+                sample_path = os.path.join("data", sample_name)
+                df = load_data(sample_path)
+                df = df.loc[:, ~df.columns.duplicated()]
+                
+                for col in df.columns:
+                    if df[col].dtype == "object":
+                        try:
+                            df[col] = pd.to_datetime(df[col])
+                        except (ValueError, TypeError):
+                            continue
+
+                shape = str(df.shape)
+                columns = ", ".join(df.columns)
+                
+                dtypes_df = pd.DataFrame({
+                    "Column": df.columns,
+                    "Data Type": df.dtypes.astype(str).values
+                })
+                
+                missing_df = pd.DataFrame({
+                    "Column": df.columns,
+                    "Missing Count": df.isnull().sum().values,
+                    "Missing %": (df.isnull().sum() / len(df) * 100).round(2).values
+                })
+                
+                filter_choices = gr.update(choices=df.columns.tolist(), value=None)
+                
+                gr.Info(f"Loaded sample dataset: {sample_name}")
+                return (df, df.copy(), shape, columns, dtypes_df, missing_df, 
+                        df.head(), df.tail(), filter_choices)
+            except Exception as e:
+                gr.Warning(f"Error loading sample file: {str(e)}")
+                return (None, None, "", "", None, None, None, None,
+                        gr.update(choices=[], value=None))
+
         file_input.upload(
             process_upload,
             inputs=file_input,
+            outputs=[
+                df_state,
+                filtered_df_state,
+                shape_output,
+                columns_output,
+                dtypes_output,
+                missing_output,
+                head_output,
+                tail_output,
+                filter_column,
+            ],
+        )
+
+        load_sample_btn.click(
+            load_sample_data,
+            inputs=[sample_dropdown],
             outputs=[
                 df_state,
                 filtered_df_state,
@@ -331,7 +428,6 @@ def create_dashboard():
                 )
             else:
                 unique_vals = df[col].dropna().unique().tolist()
-                print(unique_vals)
                 return (
                     gr.update(value=f"Categorical ({len(unique_vals)} unique values)"),
                     gr.update(value=None, visible=False),
@@ -340,6 +436,7 @@ def create_dashboard():
                     gr.update(value="", visible=False),
                     gr.update(value="", visible=False),
                 )
+
         filter_column.change(
             update_filter_ui,
             inputs=[df_state, filter_column],
@@ -487,7 +584,6 @@ def create_dashboard():
         def export_csv(df):
             if df is not None:
                 import tempfile
-                import os
                 temp_dir = tempfile.gettempdir()
                 filepath = os.path.join(temp_dir, "filtered_data.csv")
                 df.to_csv(filepath, index=False)
