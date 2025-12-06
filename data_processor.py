@@ -36,15 +36,21 @@ def load_data(file):
     """
     try:
         if file.name.endswith('.csv'):
-            df = pd.read_csv(file.name)
-            # df = df.rename(columns={'index': 'Date'})
-            for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
-                if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            df = pd.read_csv(file.name)    
         elif file.name.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file.name)
+            df_xlsx = pd.read_excel(file.name)
+            df_csv = df_xlsx.to_csv(index=False)
         else:
             raise ValueError("Unsupported file format. Please upload a CSV or Excel file.")
+        
+        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+        unnamed_cols = [col for col in df.columns if 'Unnamed' in col]
+        if unnamed_cols:
+            df = df.drop(columns=unnamed_cols)
+            
         return df
     except Exception as e:
         raise ValueError(f"Error loading data: {e}")

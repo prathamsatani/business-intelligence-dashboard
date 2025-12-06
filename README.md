@@ -85,7 +85,6 @@ Generate statistical insights without writing code:
 - **Pandas**: For high-performance data manipulation and analysis.
 - **Plotly**: For creating interactive, publication-quality graphs.
 - **Yfinance**: For downloading stock market data (used in data processing utilities).
-- **Kaleido**: For static image export of plots.
 
 ## Architecture
 
