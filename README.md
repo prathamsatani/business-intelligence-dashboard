@@ -35,8 +35,8 @@ Generate statistical insights without writing code:
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/prathamsatani/business-intelligence-dashboard.git
+   cd business-intelligence-dashboard
    ```
 
 2. **Create a virtual environment (optional but recommended):**
@@ -94,6 +94,3 @@ The system follows a modular architecture:
 3.  **Analysis Layer**: Custom modules for statistical heuristics and anomaly detection.
 4.  **Visualization Layer**: Uses Plotly Express for generating dynamic charts.
 
-## License
-
-[Insert License Here]
